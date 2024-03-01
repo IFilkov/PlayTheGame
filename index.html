@@ -33,6 +33,13 @@
             padding: 10px;
             cursor: pointer;
         }
+
+        #score {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 18px;
+        }
     </style>
     <title>Simple Game</title>
 </head>
@@ -41,23 +48,34 @@
     <h2 id="gameOverText">Game Over</h2>
     <h2 id="youWinText">You Win!</h2>
     <button id="restartButton">Restart</button>
+    <div id="score">Score: 0</div>
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
         const heroSize = 20;
         const enemySize = 20;
+        const coinSize = 15;
         let heroX = canvas.width / 2 - heroSize / 2;
         let heroY = canvas.height / 2 - heroSize / 2;
         let enemies = [];
+        let coins = [];
         let winSquare = createRandomSquare();
+        let score = 0;
         let gameOverText = document.getElementById('gameOverText');
         let youWinText = document.getElementById('youWinText');
         let restartButton = document.getElementById('restartButton');
+        let scoreElement = document.getElementById('score');
 
         function createRandomSquare() {
             const x = Math.random() * (canvas.width - enemySize);
             const y = Math.random() * (canvas.height - enemySize);
+            return { x, y };
+        }
+
+        function createRandomCoin() {
+            const x = Math.random() * (canvas.width - coinSize);
+            const y = Math.random() * (canvas.height - coinSize);
             return { x, y };
         }
 
@@ -71,9 +89,20 @@
             ctx.fillRect(enemy.x, enemy.y, enemySize, enemySize);
         }
 
+        function drawCoin(coin) {
+            ctx.fillStyle = 'yellow';
+            ctx.fillRect(coin.x, coin.y, coinSize, coinSize);
+        }
+
         function drawWinSquare() {
-            ctx.fillStyle = 'green';
+            ctx.fillStyle = 'red';
             ctx.fillRect(winSquare.x, winSquare.y, enemySize, enemySize);
+        }
+
+        function drawScore() {
+            ctx.fillStyle = '#000';
+            ctx.font = '18px Arial';
+            ctx.fillText('Score: ' + score, canvas.width - 80, 20);
         }
 
         function draw() {
@@ -81,13 +110,31 @@
 
             drawHero();
             drawWinSquare();
+            drawScore();
 
             enemies.forEach(enemy => {
                 drawEnemy(enemy);
             });
+
+            coins.forEach(coin => {
+                drawCoin(coin);
+            });
         }
 
         function checkCollision() {
+            for (let i = coins.length - 1; i >= 0; i--) {
+                const coin = coins[i];
+                if (
+                    heroX < coin.x + coinSize &&
+                    heroX + heroSize > coin.x &&
+                    heroY < coin.y + coinSize &&
+                    heroY + heroSize > coin.y
+                ) {
+                    coins.splice(i, 1);
+                    score += 10;
+                }
+            }
+
             for (const enemy of enemies) {
                 if (
                     heroX < enemy.x + enemySize &&
@@ -135,7 +182,14 @@
                 enemies.push(createRandomSquare());
             }
 
+            coins = [];
+            for (let i = 0; i < 10; i++) {
+                coins.push(createRandomCoin());
+            }
+
             winSquare = createRandomSquare();
+            score = 0;
+
             update();
         }
 
@@ -185,6 +239,10 @@
 
         for (let i = 0; i < 8; i++) {
             enemies.push(createRandomSquare());
+        }
+
+        for (let i = 0; i < 10; i++) {
+            coins.push(createRandomCoin());
         }
 
         update();
