@@ -56,12 +56,18 @@
         const heroSize = 20;
         const enemySize = 20;
         const coinSize = 15;
+        const pillSize = 20;
         let heroX = canvas.width / 2 - heroSize / 2;
         let heroY = canvas.height / 2 - heroSize / 2;
         let enemies = [];
         let coins = [];
+        let pills = [];
         let winSquare = createRandomSquare();
         let score = 0;
+        let isHeroOrange = false;
+        let pillEffectDuration = 10; // in seconds
+        let invincibleDuration = 10; // in seconds
+        let isHeroInvincible = false;
         let gameOverText = document.getElementById('gameOverText');
         let youWinText = document.getElementById('youWinText');
         let restartButton = document.getElementById('restartButton');
@@ -79,8 +85,14 @@
             return { x, y };
         }
 
+        function createRandomPill() {
+            const x = Math.random() * (canvas.width - pillSize);
+            const y = Math.random() * (canvas.height - pillSize);
+            return { x, y };
+        }
+
         function drawHero() {
-            ctx.fillStyle = 'blue';
+            ctx.fillStyle = isHeroOrange ? 'orange' : 'blue';
             ctx.fillRect(heroX, heroY, heroSize, heroSize);
         }
 
@@ -92,6 +104,11 @@
         function drawCoin(coin) {
             ctx.fillStyle = 'yellow';
             ctx.fillRect(coin.x, coin.y, coinSize, coinSize);
+        }
+
+        function drawPill(pill) {
+            ctx.fillStyle = 'purple';
+            ctx.fillRect(pill.x, pill.y, pillSize, pillSize);
         }
 
         function drawWinSquare() {
@@ -119,6 +136,10 @@
             coins.forEach(coin => {
                 drawCoin(coin);
             });
+
+            pills.forEach(pill => {
+                drawPill(pill);
+            });
         }
 
         function checkCollision() {
@@ -135,6 +156,19 @@
                 }
             }
 
+            for (let i = pills.length - 1; i >= 0; i--) {
+                const pill = pills[i];
+                if (
+                    heroX < pill.x + pillSize &&
+                    heroX + heroSize > pill.x &&
+                    heroY < pill.y + pillSize &&
+                    heroY + heroSize > pill.y
+                ) {
+                    pills.splice(i, 1);
+                    activatePillEffect();
+                }
+            }
+
             for (const enemy of enemies) {
                 if (
                     heroX < enemy.x + enemySize &&
@@ -142,7 +176,11 @@
                     heroY < enemy.y + enemySize &&
                     heroY + heroSize > enemy.y
                 ) {
-                    gameOver();
+                    if (!isHeroInvincible) {
+                        gameOver();
+                    } else {
+                        removeEnemy(enemy);
+                    }
                 }
             }
 
@@ -153,6 +191,22 @@
                 heroY + heroSize > winSquare.y
             ) {
                 youWin();
+            }
+        }
+
+        function activatePillEffect() {
+            isHeroOrange = true;
+            isHeroInvincible = true;
+            setTimeout(() => {
+                isHeroOrange = false;
+                isHeroInvincible = false;
+            }, invincibleDuration * 1000);
+        }
+
+        function removeEnemy(enemy) {
+            const index = enemies.indexOf(enemy);
+            if (index !== -1) {
+                enemies.splice(index, 1);
             }
         }
 
@@ -187,8 +241,15 @@
                 coins.push(createRandomCoin());
             }
 
+            pills = [];
+            for (let i = 0; i < 4; i++) {
+                pills.push(createRandomPill());
+            }
+
             winSquare = createRandomSquare();
             score = 0;
+            isHeroOrange = false;
+            isHeroInvincible = false;
 
             update();
         }
@@ -243,6 +304,10 @@
 
         for (let i = 0; i < 10; i++) {
             coins.push(createRandomCoin());
+        }
+
+        for (let i = 0; i < 4; i++) {
+            pills.push(createRandomPill());
         }
 
         update();
