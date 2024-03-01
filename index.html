@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        canvas {
+            border: 1px solid #000;
+        }
+
+        h2 {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        button {
+            display: none;
+            position: absolute;
+            top: 60%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px;
+            cursor: pointer;
+        }
+    </style>
+    <title>Simple Game</title>
+</head>
+<body>
+    <canvas id="gameCanvas" width="500" height="500"></canvas>
+    <h2 id="gameOverText">Game Over</h2>
+    <h2 id="youWinText">You Win!</h2>
+    <button id="restartButton">Restart</button>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const heroSize = 20;
+        const enemySize = 20;
+        let heroX = canvas.width / 2 - heroSize / 2;
+        let heroY = canvas.height / 2 - heroSize / 2;
+        let enemies = [];
+        let winSquare = createRandomSquare();
+        let gameOverText = document.getElementById('gameOverText');
+        let youWinText = document.getElementById('youWinText');
+        let restartButton = document.getElementById('restartButton');
+
+        function createRandomSquare() {
+            const x = Math.random() * (canvas.width - enemySize);
+            const y = Math.random() * (canvas.height - enemySize);
+            return { x, y };
+        }
+
+        function drawHero() {
+            ctx.fillStyle = 'blue';
+            ctx.fillRect(heroX, heroY, heroSize, heroSize);
+        }
+
+        function drawEnemy(enemy) {
+            ctx.fillStyle = 'red';
+            ctx.fillRect(enemy.x, enemy.y, enemySize, enemySize);
+        }
+
+        function drawWinSquare() {
+            ctx.fillStyle = 'green';
+            ctx.fillRect(winSquare.x, winSquare.y, enemySize, enemySize);
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            drawHero();
+            drawWinSquare();
+
+            enemies.forEach(enemy => {
+                drawEnemy(enemy);
+            });
+        }
+
+        function checkCollision() {
+            for (const enemy of enemies) {
+                if (
+                    heroX < enemy.x + enemySize &&
+                    heroX + heroSize > enemy.x &&
+                    heroY < enemy.y + enemySize &&
+                    heroY + heroSize > enemy.y
+                ) {
+                    gameOver();
+                }
+            }
+
+            if (
+                heroX < winSquare.x + enemySize &&
+                heroX + heroSize > winSquare.x &&
+                heroY < winSquare.y + enemySize &&
+                heroY + heroSize > winSquare.y
+            ) {
+                youWin();
+            }
+        }
+
+        function gameOver() {
+            gameOverText.style.display = 'block';
+            restartButton.style.display = 'block';
+            canvas.style.display = 'none';
+        }
+
+        function youWin() {
+            youWinText.style.display = 'block';
+            restartButton.style.display = 'block';
+            canvas.style.display = 'none';
+        }
+
+        function restartGame() {
+            gameOverText.style.display = 'none';
+            youWinText.style.display = 'none';
+            restartButton.style.display = 'none';
+            canvas.style.display = 'block';
+
+            heroX = canvas.width / 2 - heroSize / 2;
+            heroY = canvas.height / 2 - heroSize / 2;
+
+            enemies = [];
+            for (let i = 0; i < 8; i++) {
+                enemies.push(createRandomSquare());
+            }
+
+            winSquare = createRandomSquare();
+            update();
+        }
+
+        restartButton.addEventListener('click', restartGame);
+
+        function update() {
+            checkCollision();
+
+            enemies.forEach(enemy => {
+                enemy.x += Math.random() * 4 - 2;
+                enemy.y += Math.random() * 4 - 2;
+
+                if (enemy.x < 0) enemy.x = 0;
+                if (enemy.y < 0) enemy.y = 0;
+                if (enemy.x > canvas.width - enemySize) enemy.x = canvas.width - enemySize;
+                if (enemy.y > canvas.height - enemySize) enemy.y = canvas.height - enemySize;
+            });
+
+            draw();
+            requestAnimationFrame(update);
+        }
+
+        function handleKeyPress(e) {
+            const speed = 5;
+            switch (e.key) {
+                case 'ArrowUp':
+                    heroY -= speed;
+                    break;
+                case 'ArrowDown':
+                    heroY += speed;
+                    break;
+                case 'ArrowLeft':
+                    heroX -= speed;
+                    break;
+                case 'ArrowRight':
+                    heroX += speed;
+                    break;
+            }
+
+            if (heroX < 0) heroX = 0;
+            if (heroY < 0) heroY = 0;
+            if (heroX > canvas.width - heroSize) heroX = canvas.width - heroSize;
+            if (heroY > canvas.height - heroSize) heroY = canvas.height - heroSize;
+        }
+
+        window.addEventListener('keydown', handleKeyPress);
+
+        for (let i = 0; i < 8; i++) {
+            enemies.push(createRandomSquare());
+        }
+
+        update();
+    </script>
+</body>
+</html>
