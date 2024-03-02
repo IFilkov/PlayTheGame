@@ -48,7 +48,7 @@
     <h2 id="gameOverText">Game Over</h2>
     <h2 id="youWinText">You Win!</h2>
     <button id="restartButton">Restart</button>
-    <div id="score">Score: 0</div>
+    <!-- <div id="score">Score: 0</div> -->
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
@@ -112,15 +112,24 @@
         }
 
         function drawWinSquare() {
-            ctx.fillStyle = 'red';
+            ctx.fillStyle = 'green';
             ctx.fillRect(winSquare.x, winSquare.y, enemySize, enemySize);
         }
+
+        // function drawScore() {
+        //     ctx.fillStyle = '#000';
+        //     ctx.font = '18px Arial';
+        //     ctx.fillText('Score: ' + score, canvas.width - 80, 20);
+        // }
 
         function drawScore() {
             ctx.fillStyle = '#000';
             ctx.font = '18px Arial';
-            ctx.fillText('Score: ' + score, canvas.width - 80, 20);
-        }
+            const scoreText = 'Score: ' + score;
+            const textWidth = ctx.measureText(scoreText).width;
+            ctx.fillText(scoreText, canvas.width / 2 - textWidth / 2, 20);
+}
+
 
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -140,6 +149,13 @@
             pills.forEach(pill => {
                 drawPill(pill);
             });
+
+            const maxScore = localStorage.getItem('maxScore') || 0;
+                ctx.fillStyle = '#000';
+                ctx.font = '18px Arial';
+                const maxScoreText = 'Max Score: ' + maxScore;
+                const textWidth = ctx.measureText(maxScoreText).width;
+                ctx.fillText(maxScoreText, canvas.width / 2 - textWidth / 2, canvas.height - 20);
         }
 
         function checkCollision() {
@@ -212,16 +228,51 @@
         }
 
         function gameOver() {
+            gameOverText.textContent = 'Game Over. Your score: ' + score;
             gameOverText.style.display = 'block';
-            restartButton.style.display = 'block';
-            canvas.style.display = 'none';
-        }
+            
+            const currentScore = score;
+            const maxScore = localStorage.getItem('maxScore') || 0;
+            if (currentScore > maxScore) {
+        // Обновляем максимальный счет в localStorage
+            localStorage.setItem('maxScore', currentScore);
+    }
+
+    gameOverText.textContent = 'Game Over. Your score: ' + currentScore;
+    gameOverText.style.display = 'block';
+    restartButton.style.display = 'block';
+    canvas.style.display = 'none';
+            
+}
+
+
+        // function youWin() {
+        //     youWinText.style.display = 'block';
+        //     restartButton.style.display = 'block';
+        //     canvas.style.display = 'none';
+        // }
 
         function youWin() {
-            youWinText.style.display = 'block';
-            restartButton.style.display = 'block';
-            canvas.style.display = 'none';
-        }
+            // Обновляем местоположение квадрата ведущего к победе
+            winSquare = createRandomSquare();
+
+            // Добавляем еще четырех врагов
+            for (let i = 0; i < 4; i++) {
+                let newEnemy = createRandomSquare();
+             // Проверяем, чтобы враги не появлялись в тех же координатах, где находится игрок
+                while (Math.abs(newEnemy.x - heroX) < enemySize + heroSize && Math.abs(newEnemy.y - heroY) < enemySize + heroSize) {
+            newEnemy = createRandomSquare();
+                }
+                enemies.push(newEnemy);
+    }
+
+    // Обновляем монетки
+    coins = [];
+    for (let i = 0; i < 10; i++) {
+        coins.push(createRandomCoin());
+    }
+}
+
 
         function restartGame() {
             gameOverText.style.display = 'none';
